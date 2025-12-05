@@ -1,0 +1,26 @@
+vector_store:
+  provider: qdrant
+  config:
+    host: localhost
+    port: 6333
+
+graph_store:
+  provider: kuzu
+  config:
+    db: /tmp/mem0-example.kuzu
+
+llm:
+  provider: openai
+  config:
+    model: x-ai/grok-4.1-fast:free
+    temperature: 0.2
+
+embedder:
+  provider: openai
+  config:
+    model: qwen/qwen3-embedding-8b
+
+# reranker:
+#   provider: zero_entropy
+#   config:
+#     api_key: ${ZERO_ENTROPY_KEY}

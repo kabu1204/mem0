@@ -4,6 +4,8 @@ import os
 from src.langmem import LangMemManager
 from src.memzero.add import MemoryADD
 from src.memzero.search import MemorySearch
+from src.mem0local.add import MemoryADD as MemoryADDLocal
+from src.mem0local.search import MemorySearch as MemorySearchLocal
 from src.openai.predict import OpenAIPredict
 from src.rag import RAGManager
 from src.utils import METHODS, TECHNIQUES
@@ -46,6 +48,17 @@ def main():
                 f"mem0_results_top_{args.top_k}_filter_{args.filter_memories}_graph_{args.is_graph}.json",
             )
             memory_searcher = MemorySearch(output_file_path, args.top_k, args.filter_memories, args.is_graph)
+            memory_searcher.process_data_file("dataset/locomo10.json")
+    elif args.technique_type == "mem0-local":
+        if args.method == "add":
+            memory_manager = MemoryADDLocal(data_path="dataset/locomo10.json", is_graph=args.is_graph)
+            memory_manager.process_all_conversations()
+        elif args.method == "search":
+            output_file_path = os.path.join(
+                args.output_folder,
+                f"mem0_local_results_top_{args.top_k}_filter_{args.filter_memories}_graph_{args.is_graph}.json",
+            )
+            memory_searcher = MemorySearchLocal(output_file_path, args.top_k, args.filter_memories, args.is_graph)
             memory_searcher.process_data_file("dataset/locomo10.json")
     elif args.technique_type == "rag":
         output_file_path = os.path.join(args.output_folder, f"rag_results_{args.chunk_size}_k{args.num_chunks}.json")

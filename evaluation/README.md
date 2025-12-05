@@ -9,12 +9,14 @@ This repository contains the code and dataset for our paper: **Mem0: Building Pr
 
 This project evaluates Mem0 and compares it with different memory and retrieval techniques for AI systems:
 
-1. **Established LOCOMO Benchmarks**: We evaluate against five established approaches from the literature: LoCoMo, ReadAgent, MemoryBank, MemGPT, and A-Mem.
-2. **Open-Source Memory Solutions**: We test promising open-source memory architectures including LangMem, which provides flexible memory management capabilities.
-3. **RAG Systems**: We implement Retrieval-Augmented Generation with various configurations, testing different chunk sizes and retrieval counts to optimize performance.
-4. **Full-Context Processing**: We examine the effectiveness of passing the entire conversation history within the context window of the LLM as a baseline approach.
-5. **Proprietary Memory Systems**: We evaluate OpenAI's built-in memory feature available in their ChatGPT interface to compare against commercial solutions.
-6. **Third-Party Memory Providers**: We incorporate Zep, a specialized memory management platform designed for AI agents, to assess the performance of dedicated memory infrastructure.
+1. **Mem0 Platform**: We evaluate Mem0 using the cloud-based API platform for managed memory services.
+2. **Mem0-Local**: We test Mem0 running locally with self-hosted vector stores (Qdrant) and optional graph databases (Neo4j), providing full control and data privacy.
+3. **Established LOCOMO Benchmarks**: We evaluate against five established approaches from the literature: LoCoMo, ReadAgent, MemoryBank, MemGPT, and A-Mem.
+4. **Open-Source Memory Solutions**: We test promising open-source memory architectures including LangMem, which provides flexible memory management capabilities.
+5. **RAG Systems**: We implement Retrieval-Augmented Generation with various configurations, testing different chunk sizes and retrieval counts to optimize performance.
+6. **Full-Context Processing**: We examine the effectiveness of passing the entire conversation history within the context window of the LLM as a baseline approach.
+7. **Proprietary Memory Systems**: We evaluate OpenAI's built-in memory feature available in their ChatGPT interface to compare against commercial solutions.
+8. **Third-Party Memory Providers**: We incorporate Zep, a specialized memory management platform designed for AI agents, to assess the performance of dedicated memory infrastructure.
 
 We test these techniques on the LOCOMO dataset, which contains conversational data with various question types to evaluate memory recall and understanding.
 
@@ -51,6 +53,30 @@ Place the dataset files in the `dataset/` directory:
 
 ## 🚀 Getting Started
 
+### Mem0 vs Mem0-Local
+
+This evaluation framework supports two deployment modes for Mem0:
+
+#### **Mem0 (Remote Platform)**
+- Uses the Mem0 cloud API via `MemoryClient`
+- Requires API keys (`MEM0_API_KEY`, `MEM0_PROJECT_ID`, `MEM0_ORGANIZATION_ID`)
+- Managed infrastructure with automatic scaling
+- Ideal for production deployments with minimal setup
+- Uses remote vector stores and graph databases
+
+#### **Mem0-Local (Self-Hosted)**
+- Uses the local `Memory` class for self-hosted deployment
+- Runs entirely on your infrastructure
+- Uses local Qdrant for vector storage (stored in `./db` directory)
+- Optional Neo4j integration for graph-based memory (requires Neo4j instance)
+- Full data privacy and control
+- Ideal for research, development, and data-sensitive applications
+- Requires only OpenAI API key for LLM and embeddings
+
+**When to use each:**
+- Use **Mem0** for production applications requiring managed infrastructure
+- Use **Mem0-Local** for research, experiments, or when data must remain on-premises
+
 ### Prerequisites
 
 Create a `.env` file with your API keys and configurations. The following keys are required:
@@ -59,10 +85,15 @@ Create a `.env` file with your API keys and configurations. The following keys a
 # OpenAI API key for GPT models and embeddings
 OPENAI_API_KEY="your-openai-api-key"
 
-# Mem0 API keys (for Mem0 and Mem0+ techniques)
+# Mem0 API keys (for Mem0 and Mem0+ techniques using remote platform)
 MEM0_API_KEY="your-mem0-api-key"
 MEM0_PROJECT_ID="your-mem0-project-id"
 MEM0_ORGANIZATION_ID="your-mem0-organization-id"
+
+# Neo4j configuration (for mem0-local with graph-based search)
+NEO4J_URL="neo4j://localhost:7687"
+NEO4J_USERNAME="neo4j"
+NEO4J_PASSWORD="password"
 
 # Model configuration
 MODEL="gpt-4o-mini"  # or your preferred model
@@ -77,13 +108,21 @@ You can run experiments using the provided Makefile commands:
 #### Memory Techniques
 
 ```bash
-# Run Mem0 experiments
+# Run Mem0 experiments (remote platform)
 make run-mem0-add         # Add memories using Mem0
 make run-mem0-search      # Search memories using Mem0
 
-# Run Mem0+ experiments (with graph-based search)
+# Run Mem0+ experiments (remote platform with graph-based search)
 make run-mem0-plus-add    # Add memories using Mem0+
 make run-mem0-plus-search # Search memories using Mem0+
+
+# Run Mem0-Local experiments (local deployment)
+make run-mem0-local-add         # Add memories using Mem0 locally
+make run-mem0-local-search      # Search memories using Mem0 locally
+
+# Run Mem0-Local+ experiments (local deployment with graph-based search)
+make run-mem0-local-plus-add    # Add memories using Mem0+ locally
+make run-mem0-local-plus-search # Search memories using Mem0+ locally
 
 # Run RAG experiments
 make run-rag              # Run RAG with chunk size 500
@@ -103,14 +142,14 @@ make run-openai           # Run OpenAI experiments
 Alternatively, you can run experiments directly with custom parameters:
 
 ```bash
-python run_experiments.py --technique_type [mem0|rag|langmem] [additional parameters]
+python run_experiments.py --technique_type [mem0|mem0-local|rag|langmem|zep|openai] [additional parameters]
 ```
 
 #### Command-line Parameters:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `--technique_type` | Memory technique to use (mem0, rag, langmem) | mem0 |
+| `--technique_type` | Memory technique to use (mem0, mem0-local, rag, langmem, zep, openai) | mem0 |
 | `--method` | Method to use (add, search) | add |
 | `--chunk_size` | Chunk size for processing | 1000 |
 | `--top_k` | Number of top memories to retrieve | 30 |

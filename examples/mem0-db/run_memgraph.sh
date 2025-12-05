@@ -1,0 +1,1 @@
+docker run -p 7687:7687 -d --name memgraph-server memgraph/memgraph-mage --schema-info-enabled=True

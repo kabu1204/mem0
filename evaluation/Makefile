@@ -12,6 +12,18 @@ run-mem0-plus-add:
 run-mem0-plus-search:
 	python run_experiments.py --technique_type mem0 --method search --is_graph --output_folder results/ --top_k 30
 
+run-mem0-local-add:
+	python run_experiments.py --technique_type mem0-local --method add
+
+run-mem0-local-search:
+	python run_experiments.py --technique_type mem0-local --method search --output_folder results/ --top_k 30
+
+run-mem0-local-plus-add:
+	python run_experiments.py --technique_type mem0-local --method add --is_graph
+
+run-mem0-local-plus-search:
+	python run_experiments.py --technique_type mem0-local --method search --is_graph --output_folder results/ --top_k 30
+
 run-rag:
 	python run_experiments.py --technique_type rag --chunk_size 500 --num_chunks 1 --output_folder results/
 

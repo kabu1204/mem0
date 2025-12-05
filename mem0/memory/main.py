@@ -202,6 +202,7 @@ class Memory(MemoryBase):
             provider = self.config.graph_store.provider
             self.graph = GraphStoreFactory.create(provider, self.config)
             self.enable_graph = True
+            logger.info(f"Graph store enabled with provider: {provider}")
         else:
             self.graph = None
         # Create telemetry config manually to avoid deepcopy issues with thread locks
