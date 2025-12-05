@@ -1,6 +1,7 @@
 import json
 import os
 import time
+import logging
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 
@@ -14,6 +15,13 @@ from mem0 import Memory
 
 load_dotenv()
 
+logging.basicConfig(
+    level=logging.WARN,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 class MemorySearch:
     def __init__(self, output_path="results.json", top_k=10, filter_memories=False, is_graph=False, config=None):
@@ -37,30 +45,37 @@ class MemorySearch:
                 "vector_store": {
                     "provider": "qdrant",
                     "config": {
-                        "collection_name": "mem0_local_eval",
+                        "host": "localhost",
+                        "port": 6333,
+                        "collection_name": "mem0",
                         "path": "./db",
+                        "on_disk": True,
                     }
                 },
             }
             
             # Add graph store if graph mode is enabled
             if is_graph:
+                kuzu_db_path = os.getenv("KUZU_DB_PATH", "/tmp/mem0-example.kuzu")
+                logger.info(f"Using Kuzu graph database at: {kuzu_db_path}")
                 config["graph_store"] = {
-                    "provider": "neo4j",
+                    "provider": "kuzu",
                     "config": {
-                        "url": os.getenv("NEO4J_URL", "neo4j://localhost:7687"),
-                        "username": os.getenv("NEO4J_USERNAME", "neo4j"),
-                        "password": os.getenv("NEO4J_PASSWORD", "password"),
-                    }
+                        "db": kuzu_db_path,
+                    },
                 }
         
-        self.memory = Memory(config=config)
+        self.memory = Memory.from_config(config)
         self.top_k = top_k
-        self.openai_client = OpenAI()
+        self.openai_client = OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY"),
+            base_url=os.getenv("OPENAI_API_BASE", "https://openrouter.ai/api/v1"),
+        )
         self.results = defaultdict(list)
         self.output_path = output_path
         self.filter_memories = filter_memories
         self.is_graph = is_graph
+        self.chat_model = os.getenv("CHAT_MODEL", "gpt-4o-mini")
 
         if self.is_graph:
             self.ANSWER_PROMPT = ANSWER_PROMPT_GRAPH
@@ -109,7 +124,7 @@ class MemorySearch:
                 for memory in memories.get("results", [])
             ]
             graph_memories = [
-                {"source": relation["source"], "relationship": relation["relationship"], "target": relation["target"]}
+                {"source": relation["source"], "relationship": relation["relationship"], "destination": relation["destination"]}
                 for relation in memories.get("relations", [])
             ]
         
@@ -139,7 +154,15 @@ class MemorySearch:
 
         t1 = time.time()
         response = self.openai_client.chat.completions.create(
-            model=os.getenv("MODEL"), messages=[{"role": "system", "content": answer_prompt}], temperature=0.0
+            model=self.chat_model,
+            messages=[{"role": "system", "content": answer_prompt}],
+            extra_body={
+                "reasoning": {
+                    "effort": "minimal" if "gpt" in self.chat_model else "none",
+                }
+            },
+            temperature=0.2,
+            max_tokens=512,
         )
         t2 = time.time()
         response_time = t2 - t1

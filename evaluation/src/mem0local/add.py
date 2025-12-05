@@ -54,8 +54,6 @@ Generate personal memories that follow these guidelines:
 class MemoryADD:
     def __init__(self, data_path=None, batch_size=32, is_graph=False, config=None):
         # Initialize local Memory instance
-        os.environ["OPENROUTER_API_KEY"] = "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"
-        os.environ["OPENAI_API_KEY"] = os.environ["OPENROUTER_API_KEY"]
         if config is None:
             # Default configuration for local memory
             config = {
